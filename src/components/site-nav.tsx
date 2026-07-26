@@ -17,7 +17,9 @@ export function SiteNav() {
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4">
         <Link to="/" className="flex items-center gap-2">
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground font-display text-lg">خ</span>
+          <span className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground font-display text-lg">
+            خ
+          </span>
           <span className="font-display text-lg font-bold text-primary">{shopConfig.name}</span>
         </Link>
 
@@ -53,7 +55,12 @@ export function SiteNav() {
         </div>
       </div>
 
-      <div className={cn("md:hidden overflow-hidden border-t border-border/60 transition-all", open ? "max-h-96" : "max-h-0")}>
+      <div
+        className={cn(
+          "md:hidden overflow-hidden border-t border-border/60 transition-all",
+          open ? "max-h-96" : "max-h-0",
+        )}
+      >
         <nav className="flex flex-col gap-1 p-4">
           {navItems.map((item) => (
             <Link
