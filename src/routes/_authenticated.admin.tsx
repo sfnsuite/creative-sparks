@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, redirect, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { shopConfig } from "@/config/shop";
@@ -14,13 +14,10 @@ type CustomOrder = Tables<"custom_orders">;
 type Lead = Tables<"wholesale_leads">;
 type PromoCard = Tables<"promo_cards">;
 
+// Authorization is enforced by the parent `_authenticated` layout via
+// getVerifiedAdmin(). Child routes inherit that context; we intentionally
+// avoid a redundant session-only check here. RLS is the final authority.
 export const Route = createFileRoute("/_authenticated/admin")({
-  ssr: false,
-  beforeLoad: async () => {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) throw redirect({ to: "/auth" });
-    return { userId: data.user.id, email: data.user.email };
-  },
   component: AdminLayout,
 });
 
