@@ -53,13 +53,19 @@ function Index() {
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             {shopConfig.services.readyToBuy && (
-              <Link to="/shop" className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+              <Link
+                to="/shop"
+                className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+              >
                 شوف المتجر
                 <ArrowLeft className="h-4 w-4" />
               </Link>
             )}
             {shopConfig.services.customDesign && (
-              <Link to="/custom" className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-card px-6 py-3 text-sm font-semibold text-primary hover:bg-accent">
+              <Link
+                to="/custom"
+                className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-card px-6 py-3 text-sm font-semibold text-primary hover:bg-accent"
+              >
                 صمم موديلك
               </Link>
             )}
@@ -72,13 +78,28 @@ function Index() {
         <h2 className="font-display text-3xl font-bold text-center text-primary">شنو كنقدمو</h2>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {shopConfig.services.readyToBuy && (
-            <ServiceCard icon={<Package className="h-6 w-6" />} title="ملابس جاهزة" desc="اشري ديركت من الكتالوغ، وصلا لباب دارك." to="/shop" />
+            <ServiceCard
+              icon={<Package className="h-6 w-6" />}
+              title="ملابس جاهزة"
+              desc="اشري ديركت من الكتالوغ، وصلا لباب دارك."
+              to="/shop"
+            />
           )}
           {shopConfig.services.customDesign && (
-            <ServiceCard icon={<Scissors className="h-6 w-6" />} title="خياطة على المقاس" desc="عندك موديل ف راسك؟ رسلو ليا ونصنعو ليك." to="/custom" />
+            <ServiceCard
+              icon={<Scissors className="h-6 w-6" />}
+              title="خياطة على المقاس"
+              desc="عندك موديل ف راسك؟ رسلو ليا ونصنعو ليك."
+              to="/custom"
+            />
           )}
           {shopConfig.services.wholesale && (
-            <ServiceCard icon={<Users className="h-6 w-6" />} title="إنتاج بالجملة" desc="تاجر أو محل؟ نصاوبو ليك منتجاتك بكميات." to="/wholesale" />
+            <ServiceCard
+              icon={<Users className="h-6 w-6" />}
+              title="إنتاج بالجملة"
+              desc="تاجر أو محل؟ نصاوبو ليك منتجاتك بكميات."
+              to="/wholesale"
+            />
           )}
         </div>
       </section>
@@ -88,10 +109,14 @@ function Index() {
         <section className="mx-auto max-w-7xl px-4 py-8">
           <div className="flex items-end justify-between">
             <h2 className="font-display text-3xl font-bold text-primary">جدد ما وصل</h2>
-            <Link to="/shop" className="text-sm text-primary hover:underline">شوف الكل</Link>
+            <Link to="/shop" className="text-sm text-primary hover:underline">
+              شوف الكل
+            </Link>
           </div>
           <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {products.map((p) => <ProductCard key={p.id} product={p} />)}
+            {products.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
           </div>
         </section>
       )}
@@ -101,10 +126,25 @@ function Index() {
   );
 }
 
-function ServiceCard({ icon, title, desc, to }: { icon: React.ReactNode; title: string; desc: string; to: string }) {
+function ServiceCard({
+  icon,
+  title,
+  desc,
+  to,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+  to: string;
+}) {
   return (
-    <Link to={to} className="group rounded-2xl border border-border bg-card p-6 transition hover:border-gold hover:shadow-lg">
-      <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">{icon}</div>
+    <Link
+      to={to}
+      className="group rounded-2xl border border-border bg-card p-6 transition hover:border-gold hover:shadow-lg"
+    >
+      <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+        {icon}
+      </div>
       <h3 className="mt-4 font-display text-xl font-bold text-foreground">{title}</h3>
       <p className="mt-2 text-sm text-muted-foreground">{desc}</p>
       <div className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary group-hover:gap-2 transition-all">

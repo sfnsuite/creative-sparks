@@ -55,7 +55,10 @@ export const Route = createFileRoute("/c/$cardId")({
           content: loaderData?.card.headline ?? main?.description ?? shopConfig.description,
         },
         { property: "og:title", content: main?.title ?? shopConfig.name },
-        { property: "og:description", content: loaderData?.card.headline ?? shopConfig.description },
+        {
+          property: "og:description",
+          content: loaderData?.card.headline ?? shopConfig.description,
+        },
         ...(main?.images?.[0]
           ? [
               { property: "og:image", content: publicImageUrl(main.images[0]) },
@@ -80,9 +83,10 @@ function CardPage() {
     // access is granted to anon/authenticated on promo_cards; the RPC only
     // bumps click_count for active cards. Failures are silently ignored to
     // avoid weakening RLS or leaking existence information.
-    supabase
-      .rpc("increment_promo_card_click", { _card_id: cardId })
-      .then(() => undefined, () => undefined);
+    supabase.rpc("increment_promo_card_click", { _card_id: cardId }).then(
+      () => undefined,
+      () => undefined,
+    );
   }, [cardId]);
 
   if (!main) {

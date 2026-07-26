@@ -10,21 +10,21 @@ import type { Tables } from "@/integrations/supabase/types";
 
 type Product = Tables<"products">;
 
-
-const productQuery = (slug: string) => queryOptions({
-  queryKey: ["product", slug],
-  queryFn: async () => {
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .eq("slug", slug)
-      .eq("active", true)
-      .maybeSingle();
-    if (error) throw error;
-    if (!data) throw notFound();
-    return data as NonNullable<typeof data>;
-  },
-});
+const productQuery = (slug: string) =>
+  queryOptions({
+    queryKey: ["product", slug],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("slug", slug)
+        .eq("active", true)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) throw notFound();
+      return data as NonNullable<typeof data>;
+    },
+  });
 
 export const Route = createFileRoute("/product/$slug")({
   head: ({ loaderData }: { loaderData?: Product }) => {
@@ -67,7 +67,11 @@ function ProductPage() {
           <div>
             <div className="aspect-square overflow-hidden rounded-2xl bg-muted">
               {product.images?.[activeImg] && (
-                <img src={publicImageUrl(product.images[activeImg])} alt={product.title} className="h-full w-full object-cover" />
+                <img
+                  src={publicImageUrl(product.images[activeImg])}
+                  alt={product.title}
+                  className="h-full w-full object-cover"
+                />
               )}
             </div>
             {product.images.length > 1 && (
@@ -90,13 +94,19 @@ function ProductPage() {
             {product.category && (
               <div className="text-xs text-muted-foreground">{product.category}</div>
             )}
-            <h1 className="mt-1 font-display text-3xl font-bold text-primary md:text-4xl">{product.title}</h1>
+            <h1 className="mt-1 font-display text-3xl font-bold text-primary md:text-4xl">
+              {product.title}
+            </h1>
             <div className="mt-3 flex items-baseline gap-1 text-primary">
-              <span className="font-display text-3xl font-bold">{Number(product.price).toFixed(0)}</span>
+              <span className="font-display text-3xl font-bold">
+                {Number(product.price).toFixed(0)}
+              </span>
               <span className="text-sm">{shopConfig.currencySymbol}</span>
             </div>
             {product.description && (
-              <p className="mt-4 whitespace-pre-line text-sm text-foreground/80">{product.description}</p>
+              <p className="mt-4 whitespace-pre-line text-sm text-foreground/80">
+                {product.description}
+              </p>
             )}
 
             {product.sizes.length > 0 && (
@@ -119,9 +129,13 @@ function ProductPage() {
             <div className="mt-6">
               <div className="text-sm font-semibold">الكمية</div>
               <div className="mt-2 inline-flex items-center rounded-md border border-border">
-                <button className="px-3 py-1.5" onClick={() => setQty((q) => Math.max(1, q - 1))}>−</button>
+                <button className="px-3 py-1.5" onClick={() => setQty((q) => Math.max(1, q - 1))}>
+                  −
+                </button>
                 <span className="w-10 text-center">{qty}</span>
-                <button className="px-3 py-1.5" onClick={() => setQty((q) => q + 1)}>+</button>
+                <button className="px-3 py-1.5" onClick={() => setQty((q) => q + 1)}>
+                  +
+                </button>
               </div>
             </div>
 
@@ -144,24 +158,39 @@ function ProductPage() {
           </div>
         </div>
 
-        {showForm && <OrderForm product={product} size={size} qty={qty} onClose={() => setShowForm(false)} />}
+        {showForm && (
+          <OrderForm product={product} size={size} qty={qty} onClose={() => setShowForm(false)} />
+        )}
       </section>
       <SiteFooter />
     </div>
   );
 }
 
-function OrderForm({ product, size, qty, onClose }: { product: Product; size?: string; qty: number; onClose: () => void }) {
+function OrderForm({
+  product,
+  size,
+  qty,
+  onClose,
+}: {
+  product: Product;
+  size?: string;
+  qty: number;
+  onClose: () => void;
+}) {
   const navigate = useNavigate();
   const [form, setForm] = useState({ full_name: "", phone: "", address: "", city: "", notes: "" });
-
 
   const mutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("orders").insert({
         ...form,
         product_id: product.id,
-        product_snapshot: { title: product.title, price: product.price, image: product.images?.[0] },
+        product_snapshot: {
+          title: product.title,
+          price: product.price,
+          image: product.images?.[0],
+        },
         size,
         quantity: qty,
       });
@@ -180,17 +209,59 @@ function OrderForm({ product, size, qty, onClose }: { product: Product; size?: s
       <div className="w-full max-w-md rounded-2xl bg-card p-6" onClick={(e) => e.stopPropagation()}>
         <h3 className="font-display text-xl font-bold text-primary">تفاصيل الطلب</h3>
         <form
-          onSubmit={(e) => { e.preventDefault(); mutation.mutate(); }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            mutation.mutate();
+          }}
           className="mt-4 space-y-3"
         >
-          <input required placeholder="الاسم الكامل" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
-          <input required placeholder="رقم التيليفون" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-          <input required placeholder="العنوان" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
-          <input placeholder="المدينة" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
-          <textarea placeholder="ملاحظات (اختياري)" rows={3} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+          <input
+            required
+            placeholder="الاسم الكامل"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            value={form.full_name}
+            onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+          />
+          <input
+            required
+            placeholder="رقم التيليفون"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            value={form.phone}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+          />
+          <input
+            required
+            placeholder="العنوان"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            value={form.address}
+            onChange={(e) => setForm({ ...form, address: e.target.value })}
+          />
+          <input
+            placeholder="المدينة"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            value={form.city}
+            onChange={(e) => setForm({ ...form, city: e.target.value })}
+          />
+          <textarea
+            placeholder="ملاحظات (اختياري)"
+            rows={3}
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            value={form.notes}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })}
+          />
           <div className="flex gap-2">
-            <button type="button" onClick={onClose} className="flex-1 rounded-md border border-border px-4 py-2 text-sm">إلغاء</button>
-            <button type="submit" disabled={mutation.isPending} className="flex-1 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 rounded-md border border-border px-4 py-2 text-sm"
+            >
+              إلغاء
+            </button>
+            <button
+              type="submit"
+              disabled={mutation.isPending}
+              className="flex-1 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+            >
               {mutation.isPending ? "..." : "أكد الطلب"}
             </button>
           </div>

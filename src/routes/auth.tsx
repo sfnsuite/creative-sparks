@@ -71,9 +71,7 @@ function Auth() {
       <SiteNav />
       <section className="mx-auto max-w-md px-4 py-16">
         <div className="rounded-2xl border border-border bg-card p-8">
-          <h1 className="font-display text-2xl font-bold text-primary text-center">
-            دخول الأدمين
-          </h1>
+          <h1 className="font-display text-2xl font-bold text-primary text-center">دخول الأدمين</h1>
           <p className="mt-2 text-center text-xs text-muted-foreground">
             هاد الصفحة خاصة بمسؤولي المحل فقط.
           </p>

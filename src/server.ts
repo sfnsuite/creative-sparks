@@ -48,10 +48,7 @@ function applySecurityHeaders(response: Response, url: URL): Response {
   headers.set("X-Content-Type-Options", "nosniff");
   headers.set("X-Frame-Options", "DENY");
   headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-  headers.set(
-    "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
-  );
+  headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(), usb=()");
   headers.set("Cross-Origin-Opener-Policy", "same-origin");
   if (!headers.has("Cross-Origin-Resource-Policy")) {
     headers.set("Cross-Origin-Resource-Policy", "same-origin");
