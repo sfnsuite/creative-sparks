@@ -682,7 +682,7 @@ function SubTab({ active, onClick, children }: { active: boolean; onClick: () =>
 }
 
 function OrderCard({ order }: { order: Order }) {
-  const snap = order.product_snapshot as any;
+  const snap = order.product_snapshot as { title?: string; price?: number; image?: string } | null;
   return (
     <div className="rounded-xl border border-border bg-card p-4">
       <div className="flex items-start justify-between">
