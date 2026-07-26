@@ -203,7 +203,7 @@ function ProductEditor({
     try {
       const uploaded = await Promise.all(Array.from(files).map(uploadProductImage));
       setForm((f) => ({ ...f, images: [...f.images, ...uploaded] }));
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast.error(e.message ?? "فشل رفع الصورة");
     } finally {
       setUploading(false);
@@ -245,7 +245,7 @@ function ProductEditor({
       qc.invalidateQueries({ queryKey: ["admin", "products"] });
       onClose();
     },
-    onError: (e: any) => toast.error(e.message ?? "فشل الحفظ"),
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "فشل الحفظ"),
   });
 
   const del = useMutation({
@@ -259,7 +259,7 @@ function ProductEditor({
       qc.invalidateQueries({ queryKey: ["admin", "products"] });
       onClose();
     },
-    onError: (e: any) => toast.error(e.message ?? "فشل المسح"),
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "فشل المسح"),
   });
 
   return (
@@ -429,7 +429,7 @@ function CardsTab() {
       setCreating(false);
       setNewId("");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "خطأ"),
   });
 
   return (
@@ -501,7 +501,7 @@ function CardRow({ card, products }: { card: PromoCard; products: Product[] }) {
       toast.success("تحدث الكارت");
       qc.invalidateQueries({ queryKey: ["admin", "cards"] });
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "خطأ"),
   });
 
   const del = useMutation({

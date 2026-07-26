@@ -48,7 +48,7 @@ function Wholesale() {
       toast.success("وصل ليك طلبك. غاتوصلك مكالمة قريباً.");
       navigate({ to: "/" });
     },
-    onError: (e: any) => toast.error(e.message ?? "وقعت مشكلة"),
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "وقعت مشكلة"),
   });
 
   return (
