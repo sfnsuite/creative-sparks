@@ -273,6 +273,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_promo_card_click: {
+        Args: { _card_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"
