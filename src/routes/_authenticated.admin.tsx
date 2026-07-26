@@ -83,7 +83,7 @@ function AdminLayout() {
   );
 }
 
-function TabBtn({ active, onClick, icon, children }: any) {
+function TabBtn({ active, onClick, icon, children }: { active: boolean; onClick: () => void; icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <button
       onClick={onClick}
@@ -204,7 +204,7 @@ function ProductEditor({
       const uploaded = await Promise.all(Array.from(files).map(uploadProductImage));
       setForm((f) => ({ ...f, images: [...f.images, ...uploaded] }));
     } catch (e: unknown) {
-      toast.error(e.message ?? "فشل رفع الصورة");
+      toast.error(e instanceof Error ? e.message : "فشل رفع الصورة");
     } finally {
       setUploading(false);
     }
@@ -670,7 +670,7 @@ function OrdersTab() {
   );
 }
 
-function SubTab({ active, onClick, children }: any) {
+function SubTab({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
       onClick={onClick}
