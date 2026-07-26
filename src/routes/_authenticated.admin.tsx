@@ -649,31 +649,175 @@ const ordersQuery = queryOptions({
 });
 
 function OrdersTab() {
+  const qc = useQueryClient();
   const { data } = useSuspenseQuery(ordersQuery);
   const [kind, setKind] = useState<"orders" | "custom" | "wholesale">("orders");
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string | "all">("all");
+
+  // مُحدِّث الحالة للطلبات العادية
+  const updateOrderStatus = useMutation({
+    mutationFn: async (payload: { orderId: string; status: string }) => {
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: payload.status })
+        .eq("id", payload.orderId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "orders-all"] });
+      toast.success("تحدثات الحالة");
+    },
+    onError: (e: unknown) => {
+      toast.error(e instanceof Error ? e.message : "فشل التحديث");
+    },
+  });
+
+  // مُحدِّث الحالة للطلبات المخصصة
+  const updateCustomStatus = useMutation({
+    mutationFn: async (payload: { orderId: string; status: string }) => {
+      const { error } = await supabase
+        .from("custom_orders")
+        .update({ status: payload.status })
+        .eq("id", payload.orderId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "orders-all"] });
+      toast.success("تحدثات الحالة");
+    },
+    onError: (e: unknown) => {
+      toast.error(e instanceof Error ? e.message : "فشل التحديث");
+    },
+  });
+
+  // مُحدِّث الحالة لطلبات الجملة
+  const updateLeadStatus = useMutation({
+    mutationFn: async (payload: { leadId: string; status: string }) => {
+      const { error } = await supabase
+        .from("wholesale_leads")
+        .update({ status: payload.status })
+        .eq("id", payload.leadId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "orders-all"] });
+      toast.success("تحدثات الحالة");
+    },
+    onError: (e: unknown) => {
+      toast.error(e instanceof Error ? e.message : "فشل التحديث");
+    },
+  });
+
+  // فلترة وبحث الطلبات
+  const filterList = (list: any[], searchField: string = "full_name"): any[] => {
+    return list
+      .filter((item) => {
+        const matchesSearch =
+          !search || item[searchField]?.toLowerCase().includes(search.toLowerCase()) ||
+          item.phone?.includes(search);
+        const matchesStatus = filterStatus === "all" || item.status === filterStatus;
+        return matchesSearch && matchesStatus;
+      })
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  };
+
+  const ordersFiltered = filterList(data.orders);
+  const customFiltered = filterList(data.custom);
+  const wholesaleFiltered = filterList(data.wholesale);
+
+  const statuses = ["pending", "confirmed", "processing", "completed", "cancelled"];
+  const statusLabels: Record<string, string> = {
+    pending: "قيد الانتظار",
+    confirmed: "مؤكدة",
+    processing: "قيد المعالجة",
+    completed: "مكتملة",
+    cancelled: "ملغاة",
+  };
 
   return (
     <div>
       <h2 className="font-display text-2xl font-bold">الطلبات</h2>
-      <div className="mt-3 flex gap-1 rounded-lg bg-muted p-1 text-sm">
+      <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-end">
+        <div className="flex-1">
+          <label className="mb-1 block text-xs font-semibold text-muted-foreground">بحث</label>
+          <input
+            type="text"
+            placeholder="بحث بالاسم أو الهاتف..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-muted-foreground">الحالة</label>
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="rounded-lg border border-border bg-background px-3 py-2.5 text-sm"
+          >
+            <option value="all">الكل</option>
+            {statuses.map((s) => (
+              <option key={s} value={s}>
+                {statusLabels[s]}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="mt-4 flex gap-1 rounded-lg bg-muted p-1 text-sm">
         <SubTab active={kind === "orders"} onClick={() => setKind("orders")}>
-          شراء ({data.orders.length})
+          شراء ({ordersFiltered.length})
         </SubTab>
         <SubTab active={kind === "custom"} onClick={() => setKind("custom")}>
-          تصميم ({data.custom.length})
+          تصميم ({customFiltered.length})
         </SubTab>
         <SubTab active={kind === "wholesale"} onClick={() => setKind("wholesale")}>
-          جملة ({data.wholesale.length})
+          جملة ({wholesaleFiltered.length})
         </SubTab>
       </div>
       <div className="mt-4 space-y-3">
-        {kind === "orders" && data.orders.map((o) => <OrderCard key={o.id} order={o} />)}
-        {kind === "custom" && data.custom.map((o) => <CustomOrderCard key={o.id} order={o} />)}
-        {kind === "wholesale" && data.wholesale.map((o) => <LeadCard key={o.id} lead={o} />)}
-        {((kind === "orders" && data.orders.length === 0) ||
-          (kind === "custom" && data.custom.length === 0) ||
-          (kind === "wholesale" && data.wholesale.length === 0)) && (
-          <EmptyState msg="مازال ما وصل شي طلب هنا." />
+        {kind === "orders" &&
+          ordersFiltered.map((o) => (
+            <OrderCard
+              key={o.id}
+              order={o}
+              onStatusChange={(status) =>
+                updateOrderStatus.mutate({ orderId: o.id, status })
+              }
+            />
+          ))}
+        {kind === "custom" &&
+          customFiltered.map((o) => (
+            <CustomOrderCard
+              key={o.id}
+              order={o}
+              onStatusChange={(status) =>
+                updateCustomStatus.mutate({ orderId: o.id, status })
+              }
+            />
+          ))}
+        {kind === "wholesale" &&
+          wholesaleFiltered.map((o) => (
+            <LeadCard
+              key={o.id}
+              lead={o}
+              onStatusChange={(status) =>
+                updateLeadStatus.mutate({ leadId: o.id, status })
+              }
+            />
+          ))}
+        {((kind === "orders" && ordersFiltered.length === 0) ||
+          (kind === "custom" && customFiltered.length === 0) ||
+          (kind === "wholesale" && wholesaleFiltered.length === 0)) && (
+          <EmptyState
+            msg={
+              search || filterStatus !== "all"
+                ? "لم يتم العثور على نتائج"
+                : "مازال ما وصل شي طلب هنا."
+            }
+          />
         )}
       </div>
     </div>
@@ -699,20 +843,37 @@ function SubTab({
   );
 }
 
-function OrderCard({ order }: { order: Order }) {
+function OrderCard({ order, onStatusChange }: { order: Order; onStatusChange: (status: string) => void }) {
   const snap = order.product_snapshot as { title?: string; price?: number; image?: string } | null;
+  const statuses = ["pending", "confirmed", "processing", "completed", "cancelled"];
+  const statusLabels: Record<string, string> = {
+    pending: "قيد الانتظار",
+    confirmed: "مؤكدة",
+    processing: "قيد المعالجة",
+    completed: "مكتملة",
+    cancelled: "ملغاة",
+  };
+
   return (
     <div className="rounded-xl border border-border bg-card p-4">
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-2">
         <div>
           <div className="font-semibold">{order.full_name}</div>
           <a href={`tel:${order.phone}`} className="text-sm text-primary">
             {order.phone}
           </a>
         </div>
-        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
-          {order.status}
-        </span>
+        <select
+          value={order.status}
+          onChange={(e) => onStatusChange(e.target.value)}
+          className="rounded-full border-0 bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary cursor-pointer hover:bg-primary/20"
+        >
+          {statuses.map((s) => (
+            <option key={s} value={s}>
+              {statusLabels[s]}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="mt-2 text-sm">
         <div>
@@ -731,19 +892,36 @@ function OrderCard({ order }: { order: Order }) {
   );
 }
 
-function CustomOrderCard({ order }: { order: CustomOrder }) {
+function CustomOrderCard({ order, onStatusChange }: { order: CustomOrder; onStatusChange: (status: string) => void }) {
+  const statuses = ["pending", "confirmed", "processing", "completed", "cancelled"];
+  const statusLabels: Record<string, string> = {
+    pending: "قيد الانتظار",
+    confirmed: "مؤكدة",
+    processing: "قيد المعالجة",
+    completed: "مكتملة",
+    cancelled: "ملغاة",
+  };
+
   return (
     <div className="rounded-xl border border-border bg-card p-4">
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-2">
         <div>
           <div className="font-semibold">{order.full_name}</div>
           <a href={`tel:${order.phone}`} className="text-sm text-primary">
             {order.phone}
           </a>
         </div>
-        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
-          {order.status}
-        </span>
+        <select
+          value={order.status}
+          onChange={(e) => onStatusChange(e.target.value)}
+          className="rounded-full border-0 bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary cursor-pointer hover:bg-primary/20"
+        >
+          {statuses.map((s) => (
+            <option key={s} value={s}>
+              {statusLabels[s]}
+            </option>
+          ))}
+        </select>
       </div>
       <p className="mt-2 whitespace-pre-line text-sm">{order.description}</p>
       <div className="mt-2 text-xs text-muted-foreground">
@@ -753,10 +931,19 @@ function CustomOrderCard({ order }: { order: CustomOrder }) {
   );
 }
 
-function LeadCard({ lead }: { lead: Lead }) {
+function LeadCard({ lead, onStatusChange }: { lead: Lead; onStatusChange: (status: string) => void }) {
+  const statuses = ["pending", "confirmed", "processing", "completed", "cancelled"];
+  const statusLabels: Record<string, string> = {
+    pending: "قيد الانتظار",
+    confirmed: "مؤكدة",
+    processing: "قيد المعالجة",
+    completed: "مكتملة",
+    cancelled: "ملغاة",
+  };
+
   return (
     <div className="rounded-xl border border-border bg-card p-4">
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-2">
         <div>
           <div className="font-semibold">
             {lead.full_name}{" "}
@@ -766,9 +953,17 @@ function LeadCard({ lead }: { lead: Lead }) {
             {lead.phone}
           </a>
         </div>
-        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
-          {lead.status}
-        </span>
+        <select
+          value={lead.status}
+          onChange={(e) => onStatusChange(e.target.value)}
+          className="rounded-full border-0 bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary cursor-pointer hover:bg-primary/20"
+        >
+          {statuses.map((s) => (
+            <option key={s} value={s}>
+              {statusLabels[s]}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="mt-2 text-sm">
         {lead.product_type && (

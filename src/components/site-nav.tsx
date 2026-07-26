@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { Menu, ShoppingBag, User } from "lucide-react";
-import { useState } from "react";
+import { Menu, ShoppingBag, User, ShoppingCart } from "lucide-react";
+import { useState, useEffect } from "react";
 import { shopConfig } from "@/config/shop";
 import { cn } from "@/lib/utils";
 
@@ -9,10 +9,38 @@ const navItems = [
   shopConfig.services.readyToBuy && { to: "/shop", label: "المتجر" },
   shopConfig.services.customDesign && { to: "/custom", label: "صمم موديلك" },
   shopConfig.services.wholesale && { to: "/wholesale", label: "بالجملة" },
+  { to: "/account", label: "حسابي" },
+  { to: "/contact", label: "تواصل معنا" },
 ].filter(Boolean) as { to: string; label: string }[];
 
 export function SiteNav() {
   const [open, setOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+
+  useEffect(() => {
+    // تحديث عدد عناصر السلة
+    const updateCartCount = () => {
+      if (typeof window !== "undefined") {
+        const stored = localStorage.getItem("shop-cart");
+        if (stored) {
+          try {
+            const items = JSON.parse(stored);
+            setCartCount(items.length);
+          } catch (e) {
+            setCartCount(0);
+          }
+        } else {
+          setCartCount(0);
+        }
+      }
+    };
+
+    updateCartCount();
+    // الاستماع لتغييرات localStorage
+    window.addEventListener("storage", updateCartCount);
+    return () => window.removeEventListener("storage", updateCartCount);
+  }, []);
+
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4">
@@ -38,6 +66,18 @@ export function SiteNav() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <Link
+            to="/cart"
+            className="relative rounded-md border border-border p-2 hover:bg-accent"
+            activeProps={{ className: "bg-accent" }}
+          >
+            <ShoppingCart className="h-5 w-5" />
+            {cartCount > 0 && (
+              <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                {cartCount}
+              </span>
+            )}
+          </Link>
           <Link
             to="/auth"
             className="hidden items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm hover:bg-accent md:inline-flex"
